@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
+import 'package:get/get.dart';
 import '../models/task_model.dart';
-import '../services/auth_service.dart';
+import '../controllers/auth_controller.dart';
 import '../services/firestore_service.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/primary_button.dart';
@@ -24,6 +24,7 @@ class _AddEditTaskScreenState extends State<AddEditTaskScreen> {
   bool _isCompleted = false;
   bool _isLoading = false;
   final FirestoreService _firestoreService = FirestoreService();
+  final AuthController _authController = Get.find<AuthController>();
 
   @override
   void initState() {
@@ -63,7 +64,13 @@ class _AddEditTaskScreenState extends State<AddEditTaskScreen> {
   void _saveTask() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
-      final userId = Provider.of<AuthService>(context, listen: false).user!.uid;
+      final userId = _authController.user?.uid;
+
+      if (userId == null) {
+        Get.snackbar('Error', 'User not authenticated', backgroundColor: Colors.red, colorText: Colors.white);
+        setState(() => _isLoading = false);
+        return;
+      }
 
       final task = TaskModel(
         id: widget.task?.id ?? '',
@@ -80,13 +87,9 @@ class _AddEditTaskScreenState extends State<AddEditTaskScreen> {
         } else {
           await _firestoreService.updateTask(task);
         }
-        if (!mounted) return;
-        Navigator.pop(context);
+        Get.back();
       } catch (e) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-        );
+        Get.snackbar('Error', 'Error: $e', backgroundColor: Colors.red, colorText: Colors.white);
       } finally {
         setState(() => _isLoading = false);
       }
@@ -96,7 +99,6 @@ class _AddEditTaskScreenState extends State<AddEditTaskScreen> {
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.task != null;
-
     final mediaQuery = MediaQuery.of(context);
     final isLandscape = mediaQuery.orientation == Orientation.landscape;
 
@@ -161,7 +163,7 @@ class _AddEditTaskScreenState extends State<AddEditTaskScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      border: Border.all(color: Colors.indigo.withOpacity(0.3)),
+                      border: Border.all(color: Colors.indigo.withValues(alpha: 0.3)),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
@@ -184,7 +186,7 @@ class _AddEditTaskScreenState extends State<AddEditTaskScreen> {
                     Switch(
                       value: _isCompleted,
                       onChanged: (val) => setState(() => _isCompleted = val),
-                      activeColor: Colors.indigo,
+                      activeThumbColor: Colors.indigo,
                     ),
                   ],
                 ),

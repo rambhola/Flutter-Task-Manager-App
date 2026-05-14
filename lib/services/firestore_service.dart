@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/task_model.dart';
 
 class FirestoreService {
+
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   final String _collection = 'tasks';
 
@@ -30,6 +31,7 @@ class FirestoreService {
     }
 
     await _db.collection(_collection).doc(task.id).update(task.toMap());
+
   }
 
   Future<void> deleteTask(String taskId) async {

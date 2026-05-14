@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../services/auth_service.dart';
+import 'package:get/get.dart';
+import '../controllers/auth_controller.dart';
 import 'main_screen.dart';
 import 'login_screen.dart';
 
@@ -20,19 +20,12 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _checkAuth() async {
     await Future.delayed(const Duration(seconds: 2));
-    if (!mounted) return;
+    final AuthController authController = Get.find<AuthController>();
     
-    final authService = Provider.of<AuthService>(context, listen: false);
-    if (authService.isAuthenticated) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const MainScreen()),
-      );
+    if (authController.isAuthenticated) {
+      Get.offAll(() => const MainScreen());
     } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
-      );
+      Get.offAll(() => const LoginScreen());
     }
   }
 
@@ -60,7 +53,7 @@ class _SplashScreenState extends State<SplashScreen> {
               'Focus on what matters.',
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.indigo.withOpacity(0.7),
+                color: Colors.indigo.withValues(alpha: 0.7),
               ),
             ),
             const SizedBox(height: 48),

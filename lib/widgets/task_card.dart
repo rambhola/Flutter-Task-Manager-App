@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:get/get.dart';
 import '../models/task_model.dart';
 
-class TaskCard extends StatefulWidget {
+class TaskCard extends StatelessWidget {
   final TaskModel task;
   final Function(bool?) onToggle;
   final VoidCallback onTap;
   final VoidCallback onDelete;
 
-  const TaskCard({
+  TaskCard({
     super.key,
     required this.task,
     required this.onToggle,
@@ -16,27 +17,19 @@ class TaskCard extends StatefulWidget {
     required this.onDelete,
   });
 
-  @override
-  State<TaskCard> createState() => _TaskCardState();
-}
-
-class _TaskCardState extends State<TaskCard> {
-  bool _isExpanded = false;
+  final RxBool _isExpanded = false.obs;
 
   @override
   Widget build(BuildContext context) {
-    final mediaQuery = MediaQuery.of(context);
-    final isLandscape = mediaQuery.orientation == Orientation.landscape;
-
     return Dismissible(
-      key: Key(widget.task.id),
+      key: Key(task.id),
       direction: DismissDirection.endToStart,
-      onDismissed: (_) => widget.onDelete(),
+      onDismissed: (_) => onDelete(),
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
         decoration: BoxDecoration(
-          color: Colors.red.withOpacity(0.8),
+          color: Colors.red.withValues(alpha: 0.8),
           borderRadius: BorderRadius.circular(12),
         ),
         child: const Icon(Icons.delete_forever, color: Colors.white, size: 30),
@@ -46,11 +39,11 @@ class _TaskCardState extends State<TaskCard> {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: Colors.grey.withOpacity(0.1)),
-        ),
-        color: widget.task.isCompleted ? Colors.grey[50] : Colors.white,
+          side: BorderSide(color: Colors.grey.withValues(alpha: 0.1),
+        ),),
+        color: task.isCompleted ? Colors.grey[50] : Colors.white,
         child: InkWell(
-          onTap: widget.onTap,
+          onTap: onTap,
           borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: const EdgeInsets.all(12.0),
@@ -64,8 +57,8 @@ class _TaskCardState extends State<TaskCard> {
                       height: 24,
                       width: 24,
                       child: Checkbox(
-                        value: widget.task.isCompleted,
-                        onChanged: widget.onToggle,
+                        value: task.isCompleted,
+                        onChanged: onToggle,
                         activeColor: Colors.indigo,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
                       ),
@@ -73,12 +66,12 @@ class _TaskCardState extends State<TaskCard> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        widget.task.title,
+                        task.title,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          decoration: widget.task.isCompleted ? TextDecoration.lineThrough : null,
-                          color: widget.task.isCompleted ? Colors.grey : Colors.indigo[900],
+                          decoration: task.isCompleted ? TextDecoration.lineThrough : null,
+                          color: task.isCompleted ? Colors.grey : Colors.indigo[900],
                         ),
                       ),
                     ),
@@ -90,37 +83,33 @@ class _TaskCardState extends State<TaskCard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      AnimatedSize(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                        child: Text(
-                          widget.task.description,
-                          maxLines: _isExpanded ? null : 2,
-                          overflow: _isExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: widget.task.isCompleted ? Colors.grey : Colors.black87,
-                            height: 1.4,
-                          ),
-                        ),
-                      ),
-                      if (widget.task.description.length > 60)
-                        GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _isExpanded = !_isExpanded;
-                            });
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4.0),
+                      Obx(() => AnimatedSize(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
                             child: Text(
-                              _isExpanded ? 'Read Less' : 'Read More',
-                              style: const TextStyle(
-                                color: Colors.indigo,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
+                              task.description,
+                              maxLines: _isExpanded.value ? null : 2,
+                              overflow: _isExpanded.value ? TextOverflow.visible : TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: task.isCompleted ? Colors.grey : Colors.black87,
+                                height: 1.4,
                               ),
                             ),
+                          )),
+                      if (task.description.length > 60)
+                        GestureDetector(
+                          onTap: () => _isExpanded.toggle(),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4.0),
+                            child: Obx(() => Text(
+                                  _isExpanded.value ? 'Read Less' : 'Read More',
+                                  style: const TextStyle(
+                                    color: Colors.indigo,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                )),
                           ),
                         ),
                       const SizedBox(height: 12),
@@ -129,10 +118,10 @@ class _TaskCardState extends State<TaskCard> {
                         children: [
                           Row(
                             children: [
-                              Icon(Icons.calendar_today, size: 14, color: Colors.indigo.withOpacity(0.5)),
+                              Icon(Icons.calendar_today, size: 14, color: Colors.indigo.withValues(alpha: 0.5)),
                               const SizedBox(width: 4),
                               Text(
-                                DateFormat('MMM dd, yyyy').format(widget.task.date),
+                                DateFormat('MMM dd, yyyy').format(task.date),
                                 style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                               ),
                             ],
@@ -140,17 +129,15 @@ class _TaskCardState extends State<TaskCard> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              color: widget.task.isCompleted 
-                                ? Colors.green.withOpacity(0.1) 
-                                : Colors.orange.withOpacity(0.1),
+                              color: task.isCompleted ? Colors.green.withValues(alpha: 0.1) : Colors.orange.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
-                              widget.task.isCompleted ? 'Done' : 'Active',
+                              task.isCompleted ? 'Done' : 'Active',
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
-                                color: widget.task.isCompleted ? Colors.green : Colors.orange,
+                                color: task.isCompleted ? Colors.green : Colors.orange,
                               ),
                             ),
                           ),

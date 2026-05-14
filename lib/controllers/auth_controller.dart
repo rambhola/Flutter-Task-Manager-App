@@ -1,19 +1,17 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
-class AuthService extends ChangeNotifier {
+class AuthController extends GetxController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  User? _user;
+  final Rx<User?> rxUser = Rx<User?>(null);
+  User? get user => rxUser.value;
+  bool get isAuthenticated => rxUser.value != null;
 
-  AuthService() {
-    _auth.authStateChanges().listen((User? user) {
-      _user = user;
-      notifyListeners();
-    });
+  @override
+  void onInit() {
+    super.onInit();
+    rxUser.bindStream(_auth.authStateChanges());
   }
-
-  User? get user => _user;
-  bool get isAuthenticated => _user != null;
 
   // Sign Up
   Future<String?> signUp(String email, String password) async {

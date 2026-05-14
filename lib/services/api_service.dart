@@ -16,12 +16,12 @@ class ApiService {
           'author': data['author'],
         };
       } else {
-        print('Status Code: ${response.statusCode}');
+        debugPrint('Status Code: ${response.statusCode}');
         throw Exception('Failed to load quote');
       }
 
     } catch (e) {
-      print('Error fetching quote: $e');
+      debugPrint('Error fetching quote: $e');
       throw Exception('Error fetching quote: $e');
     }
   }

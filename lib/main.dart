@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:provider/provider.dart';
-import 'services/auth_service.dart';
+import 'package:get/get.dart';
+import 'controllers/auth_controller.dart';
+import 'controllers/task_controller.dart';
+import 'controllers/profile_controller.dart';
 import 'screens/splash_screen.dart';
 import 'firebase_options.dart';
 void main() async {
@@ -10,14 +12,12 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => AuthService()),
-      ],
-      child: const MyApp(),
-    ),
-  );
+  // Initialize Controllers
+  Get.put(AuthController());
+  Get.put(ProfileController());
+  Get.lazyPut(() => TaskController());
+
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp(
       title: 'Task Manager',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
