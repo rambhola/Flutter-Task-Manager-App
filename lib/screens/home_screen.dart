@@ -39,75 +39,84 @@ class HomeScreen extends GetView<TaskController> {
       body: user == null
           ? const LoadingWidget()
           : SafeArea(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: screenHeight * 0.01),
-                    Text(
-                      'Hello, ${user.email?.split('@')[0] ?? 'User'}',
-                      style: TextStyle(
-                        fontSize: isLandscape ? 20 : 24, 
-                        fontWeight: FontWeight.bold
+              child: CustomScrollView(
+                slivers: [
+                  SliverPadding(
+                    padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04),
+                    sliver: SliverToBoxAdapter(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(height: screenHeight * 0.01),
+                          Text(
+                            'Hello, ${user.email?.split('@')[0] ?? 'User'}',
+                            style: TextStyle(
+                              fontSize: isLandscape ? 20 : 24, 
+                              fontWeight: FontWeight.bold
+                            ),
+                          ),
+                          SizedBox(height: isLandscape ? 8 : 16),
+                          Obx(() {
+                            if (controller.isLoadingQuote.value) {
+                              return const Center(child: Padding(
+                                padding: EdgeInsets.all(16.0),
+                                child: CircularProgressIndicator(),
+                              ));
+                            } else if (controller.quoteError.value != null) {
+                              return Center(
+                                child: TextButton(
+                                  onPressed: controller.fetchQuote,
+                                  child: const Text('Retry loading quote'),
+                                ),
+                              );
+                            } else if (controller.quote.value != null) {
+                              return QuoteCard(
+                                quote: controller.quote.value!['content'],
+                                author: controller.quote.value!['author'],
+                                onRefresh: controller.fetchQuote,
+                              );
+                            }
+                            return const SizedBox.shrink();
+                          }),
+                          SizedBox(height: isLandscape ? 12 : 24),
+                          Text(
+                            'Your Tasks',
+                            style: TextStyle(
+                              fontSize: isLandscape ? 18 : 20, 
+                              fontWeight: FontWeight.bold, 
+                              color: Colors.indigo
+                            ),
+                          ),
+                          SizedBox(height: isLandscape ? 8 : 12),
+                        ],
                       ),
                     ),
-                    SizedBox(height: isLandscape ? 8 : 16),
-                    Obx(() {
-                      if (controller.isLoadingQuote.value) {
-                        return const Center(child: CircularProgressIndicator());
-                      } else if (controller.quoteError.value != null) {
-                        return Center(
-                          child: TextButton(
-                            onPressed: controller.fetchQuote,
-                            child: const Text('Retry loading quote'),
-                          ),
-                        );
-                      } else if (controller.quote.value != null) {
-                        return SizedBox(
-                          height: isLandscape ? 100 : null,
-                          child: SingleChildScrollView(
-                            child: QuoteCard(
-                              quote: controller.quote.value!['content'],
-                              author: controller.quote.value!['author'],
-                              onRefresh: controller.fetchQuote,
+                  ),
+                  SliverPadding(
+                    padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04),
+                    sliver: Obx(() {
+                      final tasks = controller.tasks;
+                      if (tasks.isEmpty) {
+                        return SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.task_alt, size: isLandscape ? 50 : 80, color: Colors.indigo.withValues(alpha: 0.2)),
+                                const SizedBox(height: 16),
+                                const Text('No tasks yet. Add one!'),
+                              ],
                             ),
                           ),
                         );
                       }
-                      return const SizedBox.shrink();
-                    }),
-                    SizedBox(height: isLandscape ? 12 : 24),
-                    Text(
-                      'Your Tasks',
-                      style: TextStyle(
-                        fontSize: isLandscape ? 18 : 20, 
-                        fontWeight: FontWeight.bold, 
-                        color: Colors.indigo
-                      ),
-                    ),
-                    SizedBox(height: isLandscape ? 8 : 12),
-                    Expanded(
-                      child: Obx(() {
-                        final tasks = controller.tasks;
-                        if (tasks.isEmpty) {
-                          return Center(
-                            child: SingleChildScrollView(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.task_alt, size: isLandscape ? 50 : 80, color: Colors.indigo.withValues(alpha: 0.2)),
-                                  const SizedBox(height: 16),
-                                  const Text('No tasks yet. Add one!'),
-                                ],
-                              ),
-                            ),
-                          );
-                        }
-                        return ListView.builder(
-                          padding: const EdgeInsets.only(bottom: 80),
-                          itemCount: tasks.length,
-                          itemBuilder: (context, index) {
+                      return SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            if (index == tasks.length) {
+                              return const SizedBox(height: 100); // Prevent FAB overlap
+                            }
                             final task = tasks[index];
                             return TaskCard(
                               task: task,
@@ -122,11 +131,12 @@ class HomeScreen extends GetView<TaskController> {
                               },
                             );
                           },
-                        );
-                      }),
-                    ),
-                  ],
-                ),
+                          childCount: tasks.length + 1,
+                        ),
+                      );
+                    }),
+                  ),
+                ],
               ),
             ),
     );
